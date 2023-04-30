@@ -271,7 +271,7 @@ bootJar {
 
 - 어플리케이션을 실행하고 ${HOST}/docs/test.html 에 접속해줍니다.
 
-![snippets](example.png)
+![example](example.png)
 
 # 마무리하며
 ---
