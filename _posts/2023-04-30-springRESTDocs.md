@@ -3,7 +3,7 @@ layout: post
 date: 2023-04-30 
 categories: [TEST,문서화]
 title:  "Spring REST Docs 설정기"
-img_path: /img/path/restdocs
+img_path: /img/path
 ---
 
 # 들어가며
@@ -219,7 +219,7 @@ class RestDocsControllerTest {
   
 - 테스트가 성공하면 build/generated-snippets/test 에 스니펫이 생성됩니다.
   
-    ![snippets](adoc.png)
+    ![snippets](/restdocs/adoc.png)
 
     - curl-request.adoc : curl 명령어
     - `http-request.adoc : http-request 스펙 문서`
@@ -271,7 +271,7 @@ bootJar {
 
 - 어플리케이션을 실행하고 ${HOST}/docs/test.html 에 접속해줍니다.
 
-![example](example.png)
+![example](/restdocs/example.png)
 
 # 마무리하며
 ---
