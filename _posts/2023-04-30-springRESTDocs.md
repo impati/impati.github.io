@@ -280,3 +280,9 @@ bootJar {
 Spring REST Docs 를 잘 활용하면 이러한 문제는 해결될 것이라고 생각합니다.
 
 다음에는 협업 프로젝트에 Spring REST Docs 를 적용한 예제를 작성해보겠습니다.
+
+
+# Reference
+---
+
+- https://docs.spring.io/spring-restdocs/docs/3.0.0/reference/htmlsingle/#documenting-your-api
