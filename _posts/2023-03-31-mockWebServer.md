@@ -1,7 +1,7 @@
 ---
 layout: post
 date: 2023-03-31 
-categories: [TEST]
+categories: [test]
 title:  "MockWebServer 사용기"
 img_path: /img/path
 ---
