@@ -330,7 +330,7 @@ public void sometimesResponseServerTest() throws Exception{
 ---
 이렇게 해서 **헬스 체크 기능 ,실패하면 3번까지 시도하기** 기능 구현과 테스트까지 완료했습니다.
 
-Spring Retry 기능은 AOP 를 사용하는 만큼 내부호출문제를 인지하고 사용해야합니다.
+Spring Retry 기능은 AOP 를 사용하는 만큼 내부 호출 문제를 인지하고 사용해야합니다.
 
 
 # Reference
