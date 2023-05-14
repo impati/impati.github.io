@@ -2,7 +2,7 @@
 layout: post
 date: 2023-05-03 
 categories: [spring]
-title:  "Spring Retry 사용기"
+title:  "재시도 기능 도입으로 안정성 높이기"
 img_path: /img/path
 ---
 
