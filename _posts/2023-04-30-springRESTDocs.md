@@ -2,7 +2,7 @@
 layout: post
 date: 2023-04-30 
 categories: [test,spring]
-title:  "Spring REST Docs 설정기"
+title:  "테스트와 문서화 한꺼번에 하기위한 REST Docs 설정기"
 img_path: /img/path
 ---
 

@@ -2,7 +2,7 @@
 layout: post
 date: 2023-03-31 
 categories: [test]
-title:  "MockWebServer 사용기"
+title:  "외부 서버와 통신하는 로직 테스트하기"
 img_path: /img/path
 ---
 
