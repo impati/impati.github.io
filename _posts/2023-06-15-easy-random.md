@@ -167,7 +167,7 @@ public class ArticleFixture {
     public static final LocalDateTime DEFAULT_CREATED_AT = now();
     public static final String DEFAULT_NICKNAME = "impati";
 
-    public static Article createDefaults() {
+    public static Article.ArticleBuilder createDefaults() {
         return Article.builder()
                 .customerId(DEFAULT_CUSTOMER_ID)
                 .boardType(DEFAULT_BOARD_TYPE)
@@ -175,8 +175,7 @@ public class ArticleFixture {
                 .content(DEFAULT_CONTENT)
                 .nickname(DEFAULT_NICKNAME)
                 .createAt(DEFAULT_CREATED_AT)
-                .updatedAt(DEFAULT_CREATED_AT)
-                .build();
+                .updatedAt(DEFAULT_CREATED_AT);
     }
 
 }
@@ -280,11 +279,11 @@ public void searchOnlyTitleName() throws Exception {
 다양한 값을 가지는 복잡한 객체를 생성한 뒤 테스트를 수행해야한다면 EasyRandom은 좋은 선택이 될 수 있다.
 
 
-# 마무리하며
+# 마치며
 ---
 다양한 값을 가지는 객체를 생성한 뒤 테스트를 수행해야 한다면 EasyRandom은 좋은 선택이 될 수 있지만 테스트에서 직관적으로 흐름을 보여주기에는 한계가 있어 보인다. 어떤 값을 가지는 객체가 생성되었는지 알기 어렵고 매번 다르기 때문이다.
 
 
 # Reference
 ---
-- https://github.com/j-easy/easy-random
+- <a href="https://github.com/j-easy/easy-random" target="_blank">https://github.com/j-easy/easy-random</a>
