@@ -259,8 +259,8 @@ public class ArticleFixtureFactory {
 ### 조회 테스트
 ```java
 @Test
-@DisplayName("게시글 제목으로만 검색")
-public void searchOnlyTitleName() throws Exception {
+@DisplayName("게시글 모든 조건 검색")
+public void searchAllCondition() throws Exception {
     // given
     List<Article> articles = new ArrayList<>();
 
