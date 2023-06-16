@@ -333,7 +333,7 @@ mockMvc.perform(delete("/api/v1/articles/{articleId}", article.getId())
 # 마무리하며
 
 ---
-기본적인 문서화에 대해 정리를 수행해보았다.
+기본적인 문서화에 대해 정리해보았다.
 
 
 # Reference

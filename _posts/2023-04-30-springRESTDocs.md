@@ -279,7 +279,7 @@ bootJar {
 기존에 노션을 활용해서 문서화를 했을 때 단순한 오타나 시간에 따라 반영되지 않은 요소들이 많았는데 \
 Spring REST Docs 를 잘 활용하면 이러한 문제는 해결될 것이라고 생각합니다.
 
-다음에는 협업 프로젝트에 Spring REST Docs 를 적용한 예제를 작성해보겠습니다.
+[Spring REST Docs 적용기](https://impati.github.io/posts/spring-rest-docs/)
 
 
 # Reference
