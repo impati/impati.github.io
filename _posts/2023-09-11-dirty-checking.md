@@ -1,6 +1,6 @@
 ---
 layout: post
-date: 2023-09-03
+date: 2023-09-11
 categories: [Spring Data JPA]
 title:  "JPA에서 변경 감지 사용 안 하기"
 img_path: /img/path
@@ -140,12 +140,12 @@ public void run(final Product product) {
 public class StockConsistencyProcessor {
     
     private final StockRepository stockRepository;
-    private final stockFetcher stocker;
+    private final StockFetcher stockFetcher;
     
     @Transactional
     public void run(final Product product) {
         // 1.재고 테이블에서 현재 상품의 재고를 모두 가져온다.
-        List<Stock> stocks = stockFetcher(product);
+        List<Stock> stocks = stockFetcher.getStocks(product);
         
         ...
     }
@@ -175,26 +175,6 @@ public class stockFetcher {
 선언적 @Transactional 이 제공하는 전파 옵션은 여러 가지가 있는데 이 중에서 *`NOT_SUPPORTED`* 옵션을 사용한다면 비트랜잭션으로 실행하고 현재 트랜잭션이 있는 경우 일시 중지한다. 
 
 ```java
-@Service
-@RequiredArgsConstructor
-public class StockConsistencyProcessor {
-    
-    private final StockRepository stockRepository;
-    private final stockFetcher stocker;
-    
-    @Transactional
-    public void run(final Product product) {
-        // 1.재고 테이블에서 현재 상품의 재고를 모두 가져온다.
-        List<Stock> stocks = stockFetcher(product);
-        
-        ...
-    }
-    
-    ...
-}
-
-=========
-
 @Service
 @RequiredArgsConstructor
 public class stockFetcher {
