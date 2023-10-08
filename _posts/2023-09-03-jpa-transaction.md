@@ -108,7 +108,7 @@ public void doStockProcess(final Long productId) {
 
 ## 문제점의 원인은 OSIV
 
-OSIV (Open In View Session) 은 View 레이어에서도 Session 을 Open 하겠다는 의미로 영속성 컨텍스트와 트랜잭션은 일반적으로 같은 생명주기를 가지는데 OSIV 가 true 인 경우 트랜잭션이 닫히더라도 View 레이어까지 영속성 컨텍스트를 유지하는 기능이다.
+OSIV (Open In View Session) 은 View 레이어에서도 Session 을 유지하겠다는 의미로 영속성 컨텍스트와 트랜잭션은 일반적으로 같은 생명주기를 가지는데 OSIV 가 true 인 경우 트랜잭션이 닫히더라도 View 레이어까지 영속성 컨텍스트를 유지하는 기능을 말한다.
 
 프로젝트에서 OSIV 설정을 별도로 해준 적이 없고 기본 설정이 true 이므로 `StockProcessingService` 의 `doStockProcess` 에서 트랜잭션이 종료되더라도 영속성 컨텍스트는 계속해서 유지가 되어 하나의 요청에 수행한 트랜잭션이 많아질수록 영속성 컨텍스트에 엔티티들이 계속해서 쌓이게 되어 오버헤드가 발생해 시간이 오래 걸린 것이었다.
 
