@@ -10,7 +10,7 @@ img_path: /img/path
 
 자바에서 equals() ,hashcode() 를 재정의하는 이유는 무엇일까? 생성한 객체의 동일성 수준의 같음을 넘어 동등성 수준의 같음을 원하기 때문이다.
 
-여기서 동일성은 실제로 참조가 같은 객체를 참조하고 있는 경우를 말하며 동등성은 도메인 규칙에 의해 같은 객체이다라고 판단하는 기준을 말한다. 그리고 equals() ,hashcode() 는 항상 같이 재정의해줘야 하는데 이유는 [여기](https://tecoble.techcourse.co.kr/post/2020-07-29-equals-and-hashCode/)에서 알아볼 수 있다.
+여기서 동일성은 실제로 참조가 같은 객체를 가르키고 있는 경우를 말하며 동등성은 도메인 규칙에 의해 같은 객체이다라고 판단하는 기준을 말한다. 그리고 equals() ,hashcode() 는 항상 같이 재정의해줘야 하는데 이유는 [여기](https://tecoble.techcourse.co.kr/post/2020-07-29-equals-and-hashCode/)에서 알아볼 수 있다.
 
 그렇다면 JPA Entity 에서 equals() ,hashcode() 는 재정의해야 할까? 해야한다면 어떻게 해야할까?
 
