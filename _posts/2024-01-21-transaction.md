@@ -7,10 +7,11 @@ img_path: /img/path
 ---
 
 ## 들어가며
-데이터베이스에 정말 읽기만 하는 경우 @Transactional(readOnly=true) 로 읽기 전용 트랜잭션을 사용하여 플러쉬를 호출하지 않음으로써 어느 정도의 성능 최적화를 어느정도 이뤄낼 수 있다. 
+정말 읽기만 하는 경우 @Transactional(readOnly=true) 로 읽기 전용 트랜잭션을 사용하여 플러쉬를 호출하지 않음으로써 어느 정도의 성능 최적화를 어느정도 이뤄낼 수 있다. 
+
 또는 읽기 전용 DB 에 쿼리를 보내기 위해 @Transactional(readOnly=true) 를 사용하여 라우팅 하기도 한다.
 
-읽기 트랜잭션에서 쓰기 트랜잭션을 사용하면 서버에서 오류가 발생할 것이라고 예상했지만 어느 날 @Transactional(readOnly=true) 트랜잭션 내에서 쓰기 트랜잭션을 사용할 때 서버에서 오류가 나는 것이 아닌 DB에서 오류가 발생하는 문제를 마주했다.
+읽기 트랜잭션에서 쓰기 트랜잭션을 사용하면 서버에서 오류가 발생할 것이라고 예상했지만 @Transactional(readOnly=true) 트랜잭션 내에서 쓰기 트랜잭션을 호출했을 때 서버에서 오류가 나는 것이 아닌 DB에서 오류가 발생하는 문제를 마주했다.
 
 ## @Transactional(readOnly=true) 에서 쓰기 작업
 
@@ -105,27 +106,29 @@ Connection is read-only. Queries leading to data modification are not allowed
 
 ### MariaDB
 
-에러가 발생한 프로젝트에서는  MariaDB 를 사용하고 있었는데 이 문제를 마주한 것으로 봐서는 H2 와 동일하게 위 테스트를 통과할 것으로 예상했고 실제로 통과하였다. 쿼리를 executeUpdate() 과정에서 readOnly 를 체크하고 예외를 던지는 Driver 가 있는 반면 그렇지 않은 Driver 도 있었기에 이런 차이가 발생했다.
+에러가 발생한 프로젝트에서는  MariaDB 를 사용하고 있었는데 이 문제를 마주한 것으로 봐서는 H2 와 동일하게 위 테스트를 통과할 것으로 예상했고 실제로 통과하였다. 쿼리를 executeUpdate() 과정에서 readOnly 를 체크하고 예외를 던지는 Driver 가 있는 반면 그렇지 않은 Driver 도 있었기에 이런 차이가 발생
 
 MySQL 의 `ClientPreparedStatement` 에서는 readOnly 를 체크하고 예외를 던지는 모습이다.
 
 ![](/tx/first.png)
 
-반면 MariaDB 의 ClientSidePreparedStatement 에서는 그런 과정을 찾아볼 수 없다.
+반면 MariaDB 의 `ClientSidePreparedStatement` 에서는 그런 과정을 찾아볼 수 없다.
 
 ![](/tx/second.png)
 
 읽기 트랜잭션에서 쓰기 트랜잭션이 잘 돌아간다면 무엇이 문제인가 ? 읽기를 위한 목적과 쓰기를 하기 위한 목적을 최종적으로 모두 달성한 것이 아닌가 라는 생각이 들 수도 있을 것 같다.
 
-문제는 Read-Write DB 를 별도로 구축되어 있고 읽기 트랜잭션에서 쿼리를 Read DB 로 보내게 되었을 때 발생한다.
+문제는 Read-Write DB 를 별도로 구축되어 있고 읽기 트랜잭션에서 Command 쿼리를 Read DB 로 보내게 되었을 때 발생한다.
 
 Read-Write DB 를 별도로 구축되어 있다면 Read DB 에 쓰기 동작을 수행할 수 없어 쿼리가 전달되었을 때 에러가 발생하게 되고 결국 쓰기 동작의 목적은 달성하지 못하게 되어 장애로 이어질 수 있다.
 
 ## 문제 해결하기
 
-이 문제에 대한 명확하고 좋은 해결 방법은 잘 모르겠다. DB 마다 readOnly 동작이 다를 수 있다는 것을 알고 있는 것이 중요할 것 같다. 동시성 문제처럼
+이 문제에 대한 명확하고 좋은 해결 방법은 잘 모르겠다. DB 마다 readOnly 동작이 다를 수 있다는 것을 알고 있는 것이 중요할 것 같다.
 
-그럼에도 문제 해결방법을 찾아보면 첫 번째는 MySQL 과 같은 readOnly 옵션이 true 일 때 쓰기 동작을 하는 경우 예외를 던지는 DB 를 테스트 DB 로 사용하는 것이다. 
+그럼에도 문제 해결방법을 찾아보면 
+
+첫 번째는 MySQL 과 같은 readOnly 옵션이 true 일 때 쓰기 동작을 하는 경우 예외를 던지는 DB 를 테스트 DB 로 사용하는 것이다. 
 
 두 번째는 이미 운영에서 Read-Write DB 로 구축되어 있다고 한다면 , 테스트 단계에서 Read-Write DB 를 간단히 구축하고 readOnly 옵션에 따라 라우팅을 하여 Read DB 에 Command 쿼리가 전달되는지 테스트하는 것이 해결책이 될 수 있을 것 같다.
 
