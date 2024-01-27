@@ -84,9 +84,9 @@ Entity 와 복사본 Entity 간의 비교는 AbstractEntityPersister 의 findDri
 
 properties[i] 의 Type 으로는 다음과 같이  OneToOne , ManyToOne ComponetType , AnyType 등 이 있으며 각 Type 마다 isDirty 를 구현하고 있다.
 ![](/select/third.png)
-내부 구현을 살펴보면  `@OneToMany`, `@OneToOne`, `@ManyToOne`등으로 선언된 객체를 EntityType 이라고 하는데 이 경우에는 항상 false 를 응답한다.
+내부 구현을 살펴보면  `@OneToMany`, `@OneToOne`, `@ManyToOne`등으로 선언된 객체를 EntityType 이라고 하는데 이 경우에는 먼저 참조 비교를 수행한 뒤 참조가 다르면 @Id 로 설정되어 있는 속성을 비교하여 변경여부를 판단한다.
 
-자바 객체 String , Integer ,Boolean , LocalDateTime 등의  자바 타입의 경우에는 이미 구현되어 있는 JavaTypeDescriptor 가 객체 간의 동등성 비교를 수행하여 변경 여부를 판단하고 @Embeddable 타입의 경우 ComponentType 인데  ComponentType 의 변경 여부 판단은 @Embeddable 타입의 객체 내부 속성을 비교하여 여부를 판단하게 된다.
+자바 객체 String , Integer ,Boolean , LocalDateTime 등의  자바 타입의 경우에는 AbstractStandardBasicType 에서 이미 구현되어 있는 JavaTypeDescriptor 가 객체 간의 동등성 비교를 수행하여 변경 여부를 판단하고 @Embeddable 타입의 경우 ComponentType 에서 @Embeddable 타입의 객체 내부 속성을 비교하여 변경 여부를 판단하게 된다.
 
 그리고 이외에 JavaTypeDescriptor 가 등록되어 있지 않은 타입이거나 @Embeddable 혹은 EntityType 이 아닌 경우에는 Objects.equals 를 호출하며 더티체킹 여부를 판단한다.
 
