@@ -126,12 +126,12 @@ public @interface DisabledLog {
 @Component
 public class DisabledLogAspect {
 
-    @Before("@annotation(com.baemin.coupon.log.DisabledLog)")
+    @Before("@annotation(DisabledLog)")
     public void before() {
         MDC.put("DISABLE_LOGGING", "true");
     }
 
-    @After("@annotation(com.baemin.coupon.log.DisabledLog)")
+    @After("@annotation(DisabledLog)")
     public void after() {
         MDC.remove("DISABLE_LOGGING");
     }
@@ -153,6 +153,141 @@ public class DemoController {
     }
 }
 ```
+## 남아있는 문제점
+### 하위 모듈에서 로깅 비활성화시 문제
+이러한 방식은 Controller 에서만 사용할 수 있는 기능이 아니라 모든 빈에서 적용가능하다.
+만약, 다음과 같이 api 시작 전/후에 로깅하고 있는 경우 demo() 에 @DisabledLog 을 추가하면 아무것도 로깅되지 않을 것이다.
+
+```java
+@RestController
+public class DemoController {
+
+    private final DemoService demoService;
+
+    @PostMapping("/demo")
+    @DisabledLog
+    public String demo() {
+        log.info("domo api start") // 로깅 안됨
+
+        demoService.doSomething();
+
+        log.info("domo api end") // 로깅 안됨
+        return "ok";
+    }
+}
+```
+
+이때 , demoService#doSomething() 에서도 @DisabledLog 을 사용하면 어떻게 될까 ? 
+마찬가지로 demoService#doSomething() 에서도 로깅되지 않을 것이다. 
+```java
+@Service
+public class DemoService {
+
+
+    @DisabledLog
+    public void doSomething() {
+        log.info("DemoService doSomething start")  // 로깅 안됨
+
+        // ... 
+
+        log.info("DemoService doSomething end")  // 로깅 안됨
+    }
+}
+```
+
+하지만 이 경우에 DemoController#demo 에서 `log.info("domo api end") ` 이 부분은 로깅이 되는 모습을 볼 수 있다.
+```java
+@RestController
+public class DemoController {
+
+    private final DemoService demoService;
+
+    @PostMapping("/demo")
+    @DisabledLog
+    public String demo() {
+        log.info("domo api start") // 로깅 안됨
+
+        demoService.doSomething();
+
+        log.info("domo api end") // 로깅 됨
+        return "ok";
+    }
+}
+```
+이러한 일이 발생하는 이유는 DemoService#doSomething 이 끝날 때 MDC 에서 DISABLE_LOGGING 키값이 remove 됬기 때문이다.
+로직 흐름을 나열해보면 다음과 같다.
+
+>
+- `MDC.put("DISABLE_LOGGING", "true")` MDC 에 DISABLE_LOGGING : true 저장
+- `DemoController#demo`  호출
+    - `log.info("domo api start")` 필터링 됨
+        - `MDC.put("DISABLE_LOGGING", "true")`  MDC 에 DISABLE_LOGGING : true 저장
+        - `DemoService#doSomething` 호출
+            -  `log.info("DemoService doSomething start")` 필터링 됨
+            -  `log.info("DemoService doSomething end")` 필터링 됨
+        - `MDC.remove("DISABLE_LOGGING");` 호출로 DISABLE_LOGGING 가 제거됨
+    - `log.info("domo api end")` 가 필터링 되지 않음
+- `MDC.remove("DISABLE_LOGGING")` 호출
+
+이 문제를 해결하기 위해서 MDC 키에 이미 `DISABLE_LOGGING : true` 로 저장되어 있는 경우에는 MDC.remove 동작을 하지 않도록 제어하면 된다.
+즉 , 상위 모듈에서 로깅을 비활성화하고 있다면 참여만 하는 것이다.
+
+@Around 를 사용해서 이미 MDC 키에 값이 있다면 joinPoint.proceed() 를 바로 호출하고 그렇지 않으면 DISABLE_LOGGING 에 true 를 설정해주는 방법으로 제어할 수 있다.
+호출 이후에는 잊지말고 반드시 remove 해줘야한다.
+
+```java
+@Aspect
+@Component
+public class DisabledLogAspect {
+
+    private static final DISABLE_LOGGING = "DISABLE_LOGGING";
+
+    @Around("@annotation(DisabledLog)")
+    public Object noLogging(ProceedingJoinPoint joinPoint) throws Throwable {
+        if (StringUtils.hasText(MDC.get(NO_LOGGING_KEY))) {
+            return joinPoint.proceed();
+        }
+        try {
+            MDC.put(NO_LOGGING_KEY, "true");
+            return joinPoint.proceed();
+        } finally {
+            MDC.remove(NO_LOGGING_KEY);
+        }
+    }
+}
+```
+
+이렇게 변경함으로써 상위 모듈에서 비활성화한 로깅 설정을 의도치 않게 제거하는 일을 방지할 수 있다. 
+
+
+### 비동기 호출시 로깅 비활성화 문제
+트랜잭션과 같이 비동기 호출된 로직이 트랜잭션에 영향을 받지 않는 것처럼 로깅 비활성화 시 비동기 호출된 모듈에 대해서는 여전히 로깅을 하도록 원할 수 있다.
+MDC 에 저장된 켄텍스트는 스레드 단위이기 때문에 비동기 스레드의 경우에는 DISABLE_LOGGING : true 설정을 가지고 있지 않아 상위 모듈에서 로깅을 비활성화 했더라도 여전히 로깅될 것이다.
+
+하지만 만약 상위 모듈에서 설정한 로깅 비활성화 설정이 비동기 호출된 로직에도 전파하고 싶은 경우에는 어떻게 할 수 있을까?
+상위 모듈의 MDC 컨텍스트를 MDC#getCopyOfContextMap 를 사용하여 비동기 스레드에 복사하는 방식으로 전파할 수 있다.
+
+비동기 호출을 위한 TaskExecutor 설정시 MDC#getCopyOfContextMap 을 사용하여 MDC 컨텍스트를 복사한 TaskDecorator 를 등록해주면 상위 모듈에서의 로깅 비활성화 설정을 비동기 스레드에도 전파할 수 있다.
+
+```java
+public class MdcContextCopyTaskDecorator implements TaskDecorator {
+
+    @Override
+    public Runnable decorate(Runnable runnable) {
+        Map<String, String> callerThreadContext = MDC.getCopyOfContextMap();
+        return () -> {
+            try {
+                Optional.ofNullable(callerThreadContext).ifPresent(MDC::setContextMap);
+                runnable.run();
+            } finally {
+                MDC.clear();
+            }
+        };
+    }
+}
+```
+TaskExecutor 을 ThreadPoolTaskExecutor 로 사용하는 경우에는 마찬가지로 MDC 컨텍스트를 비워줘야한다.
+
 
 ## 마무리하며
 
