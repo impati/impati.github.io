@@ -1,6 +1,6 @@
 ---
 layout: post
-date: 2026-08-23 20:00:00 +0900
+date: 2026-08-23
 categories: [backend, architecture]
 title: "폐기 즉시성을 포기하고 인증 가용성을 얻기까지"
 mermaid: true
