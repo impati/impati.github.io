@@ -183,7 +183,11 @@ sequenceDiagram
 
 이 구문을 쓴 목적은 중복 요청을 SQL 예외로 종료하지 않으면서 `order_id` 유일 인덱스의 경합에 참여시키는 것이다. 승자가 아직 트랜잭션을 끝내지 않았다면 패자는 같은 유일 인덱스에서 기다린다. 승자가 커밋하면 no-op update 경로로 빠지고, 이어지는 잠금 조회에서 완성된 예약을 읽는다. `ON DUPLICATE KEY UPDATE`는 특정 유일 인덱스만 대상으로 하지 않으므로 어떤 제약이 충돌할 수 있는지는 테이블 전체를 기준으로 확인해야 한다.
 
-`reservations` 행을 새로 삽입한 요청은 아직 `reservation_lines`를 저장하지 않은 상태다. 이미 완성된 예약을 만난 요청은 적어도 하나의 `reservation_lines` 행을 가진다. 이를 이용해 저장소 포트는 다음 의미를 제공한다.
+upsert의 실행 결과로 반환되는 affected rows는 신규 예약과 기존 예약을 구분하는 기준으로 사용하지 않았다. MySQL은 새 행을 삽입하면 1, 기존 행을 실제로 변경하면 2, 기존 값을 그대로 대입하면 0을 반환한다. 하지만 연결에 `CLIENT_FOUND_ROWS`가 적용되면 기존 값을 그대로 대입한 경우에도 1을 반환한다. Connector/J에서는 `useAffectedRows` 설정이 이 동작에 영향을 준다. 따라서 반환값 1이 새 행을 삽입했다는 뜻인지는 커넥션 설정에 따라 달라질 수 있다. 자세한 동작은 [MySQL의 `INSERT ... ON DUPLICATE KEY UPDATE` 문서](https://dev.mysql.com/doc/refman/8.4/en/insert-on-duplicate.html)와 [Connector/J의 `useAffectedRows` 문서](https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-connection.html)에서 확인할 수 있다.
+
+그래서 upsert의 반환값은 무시하고 `order_id`로 예약을 `SELECT ... FOR UPDATE` 조회했다. 같은 주문의 요청이 앞선 트랜잭션을 기다리고 있었다면, 잠금이 풀린 뒤 그 트랜잭션이 커밋한 예약을 읽는다. 새 `reservations` 행을 삽입한 요청에는 아직 `reservation_lines`가 없고, 기존의 완성된 예약에는 적어도 하나의 품목 행이 있다. 드라이버가 돌려주는 숫자 대신 실제로 저장된 상태를 기준으로 신규 처리와 기존 예약 응답을 구분한 것이다.
+
+이 판단을 저장소 인터페이스의 `claimReservation` 메서드로 감쌌다.
 
 ```java
 Optional<Reservation> claimReservation(Reservation candidate);
